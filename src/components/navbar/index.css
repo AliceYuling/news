@@ -1,0 +1,18 @@
+.nav-bar {
+  line-height: 64px;
+}
+
+.nav-bar .user-wrap {
+  float: right;
+  margin-right: 32px;
+  color: #fff;
+}
+
+.nav-bar .user-wrap i.icon-user {
+  color: #fff;
+}
+
+.nav-bar .user-wrap span {
+  display: inline-block;
+  margin-left: 8px;
+}
