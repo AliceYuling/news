@@ -8,6 +8,11 @@
   color: #fff;
 }
 
+.nav-bar .user-wrap>a {
+  color: #fff;
+  margin-right: 16px;
+}
+
 .nav-bar .user-wrap i.icon-user {
   color: #fff;
 }

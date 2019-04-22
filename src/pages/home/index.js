@@ -1,22 +1,30 @@
 import React from 'react'
 import { List, Icon, Tag } from 'antd'
 import './index.css'
-import { getNewsList, updateRecord } from '../../service/api/news.js'
+import { getNewsList, updateRecord, getRecommendList, getRandomList } from '../../service/api/news.js'
 
 class Home extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      userId: '1',
       list: [],
       curTag: '体育',
       pageSize: 10,
       curPage: 1,
-      total: 0
+      total: 0,
+      firstLoad: true
     }
   }
 
   componentDidMount() {
     this.getList()
+    const userId = window.localStorage.getItem('userId')
+    if (userId) {
+      this.setState({
+        userId
+      })
+    }
   }
 
   gotoDetail(id) {
@@ -25,32 +33,65 @@ class Home extends React.Component {
 
   handleTagChange(tag) {
     this.setState({
-      curTag: tag
+      curPage: 1
     })
-    this.getList()
+    this.setState({
+      firstLoad: false,
+      curTag: tag
+    }, () => this.getFilteredList())
   }
 
-  getList() {
-    getNewsList(this.state.curTag, this.state.curPage, this.state.pageSize).then(res => {
+  // 页码改变
+  handlePageChange(page) {
+    this.setState({ curPage: page }, () => {
+      this.state.firstLoad ? this.getList() : this.getFilteredList()
+    })
+  }
+
+  // 获取某一类型的列表
+  getFilteredList() {
+    getNewsList(this.state.userId, this.state.curTag, this.state.curPage, this.state.pageSize).then(res => {
       this.setState({
         list: res.data.list
       })
     })
   }
 
-  handleRecord(news, operate) {
-    if (operate === 1) {
+  // 获取列表
+  getList() {
+    getRandomList(this.state.userId, this.state.curPage, this.state.pageSize).then(res => {
+      this.setState({
+        list: res.data.list
+      })
+    })
+  }
 
-    }
+  // 刷新，获取推荐列表
+  refreshList() {
+    getRecommendList(this.state.userId, this.state.curPage, this.state.pageSize).then(res => {
+      this.setState({
+        list: res.data.list
+      })
+    })
+  }
+  
+  // 点击、收藏时调用接口记录
+  // 1. 不感兴趣
+  // 2. 点击
+  // 3. 浏览
+  // 4. 收藏
+  // 5. 分享
+  handleRecord(news, operate) {
     const record = {
       id: '2',
       news_id: news.id,
       operate,
       time: new Date(),
-      user_id: 0
+      user_id: this.state.userId
     }
     updateRecord(record).then(res => {
-      console.log(res.data)
+      console.log(this.state.firstLoad)
+      this.state.firstLoad ? this.getList() : this.getFilteredList()
     })
   }
 
@@ -80,7 +121,7 @@ class Home extends React.Component {
         <div className="news-list-header">
           <h2>新闻推荐</h2>
           <Icon
-            onClick={()=>this.getList()}
+            onClick={()=>this.refreshList()}
             type="reload"
             className="icon refresh-icon"/>
         </div>
@@ -98,8 +139,10 @@ class Home extends React.Component {
           dataSource={this.state.list}
           pagination={{
             onChange: (page) => {
-              this.setState({ curPage: page })
+              this.handlePageChange(page)
             },
+            total: 50,
+            simple: true,
             pageSize: this.state.pageSize,
             current: this.state.curPage
           }}
@@ -109,16 +152,15 @@ class Home extends React.Component {
                 <Icon
                   type="star"
                   theme="twoTone"
-                  twoToneColor={item.isStar?"#eb2f96":"#ccc"}
-                  onClick={()=>this.handleRecord(item,1)}
+                  twoToneColor={item.is_collected?"#eb2f96":"#ccc"}
+                  onClick={()=>this.handleRecord(item,4)}
                   style={{marginRight: '16px'}} />
-                <a href="javascript:void(0)" onClick={()=>this.handleRecord(item, 4)}>不感兴趣</a>
               </div>
             }>
               <List.Item.Meta
                 title={<a href={item.source_url} target="_blank">{item.title}</a>}
                 description={item.time}
-                onClick={()=>this.handleRecord(item,0)}
+                onClick={()=>this.handleRecord(item,2)}
               />
               {item.abstract_info}
             </List.Item>

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = 'http://10.8.1.139:8088'
+const API_URL = process.env.API_URL || 'http://10.8.1.139:8088'
 
 const service = axios.create({
   baseURL: API_URL, // api 的 base_url
